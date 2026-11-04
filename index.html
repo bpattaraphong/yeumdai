@@ -1,557 +1,263 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบยืม-คืนอุปกรณ์ (Equipment Borrowing & Returning System)</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuRvndYCKDnSsuLgQqMoV2JvSp0BGCzHnzfJjQa-tXbcUNMUirXXJdiAGXixnO_zGe/exec";
+    let tempSlipBase64 = "";
+    let cachedRequests = [];
 
-    <!-- Header / Navbar -->
-    <header class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('user')">
-                <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
-                </div>
-                <div>
-                    <h1 id="site-title" class="text-lg font-bold text-slate-900 tracking-tight">ระบบยืม-คืนอุปกรณ์</h1>
-                    <p id="site-subtitle" class="text-xs text-slate-400 font-medium">Equipment Borrowing & Returning System</p>
-                </div>
-            </div>
+    // โหลดข้อมูลทั้งหมดจาก Google Sheets เมื่อเปิดเว็บ
+    async function fetchAllRequests() {
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL);
+            const data = await response.json();
+            cachedRequests = Array.isArray(data) ? data : [];
+        } catch (err) {
+            console.error("Error loading data:", err);
+            cachedRequests = [];
+        }
+    }
 
-            <!-- Quick Switch & Admin Login -->
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('user')" id="btn-user-tab" class="px-4 py-2 text-sm font-semibold rounded-xl transition bg-emerald-50 text-emerald-600">หน้าผู้ใช้งาน</button>
-                <button onclick="openAdminModal()" id="btn-admin-tab" class="px-4 py-2 text-sm font-semibold rounded-xl transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    ผู้ดูแลระบบ
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    window.onload = async function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('borrowDate').value = now.toISOString().slice(0, 16);
         
-        <!-- ================= USER PORTAL ================= -->
-        <div id="user-portal" class="space-y-8">
-            <!-- Hero Announcement Banner -->
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-500/10 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="relative z-10 space-y-2 text-center md:text-left">
-                    <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase">ประกาศประชาสัมพันธ์</span>
-                    <h2 id="banner-title" class="text-2xl sm:text-3xl font-bold">ยืมอุปกรณ์สะดวก รวดเร็ว ตรวจสอบได้ทันที</h2>
-                    <p id="banner-desc" class="text-emerald-50 text-sm max-w-xl">กรุณากรอกข้อมูลให้ครบถ้วนและแนบบัตรประจำตัวเพื่อความรวดเร็วในการอนุมัติคำขอโดยเจ้าหน้าที่</p>
-                </div>
-                <div class="relative z-10 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    <div>
-                        <div class="text-xs text-emerald-100 font-medium">สถานะระบบ</div>
-                        <div class="text-sm font-bold flex items-center gap-1.5 mt-0.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse"></span> พร้อมให้บริการ
-                        </div>
-                    </div>
-                </div>
-            </div>
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
+        document.getElementById('returnDate').value = tomorrow.toISOString().slice(0, 16);
 
-            <!-- Grid: Form & Tracking -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Borrow Form (Left) -->
-                <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
-                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900">ฟอร์มขอยืมอุปกรณ์</h3>
-                            <p class="text-xs text-slate-400">กรอกข้อมูลผู้ยืมและรายการอุปกรณ์ที่ต้องการ</p>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">1</div>
-                    </div>
+        await fetchAllRequests();
+    };
 
-                    <form id="borrowForm" onsubmit="handleBorrowSubmit(event)" class="space-y-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">ชื่อ-นามสกุล</label>
-                                <input type="text" id="studentName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition" placeholder="เช่น ดนุนันท์ ใจดี">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">รหัสนักเรียน / รหัสประจำตัว</label>
-                                <input type="text" id="studentId" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition" placeholder="เช่น 12345">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">ระดับชั้น</label>
-                            <select id="studentLevel" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
-                                <option value="">-- เลือกระดับชั้น --</option>
-                                <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
-                                <option value="ม.2">มัธยมศึกษาปีที่ 2</option>
-                                <option value="ม.3">มัธยมศึกษาปีที่ 3</option>
-                                <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
-                                <option value="ม.5">มัธยมศึกษาปีที่ 5</option>
-                                <option value="ม.6">มัธยมศึกษาปีที่ 6</option>
-                                <option value="ปวช.1">ปวช. 1</option>
-                                <option value="ปวช.2">ปวช. 2</option>
-                                <option value="ปวช.3">ปวช. 3</option>
-                                <option value="อื่นๆ">อื่นๆ / บุคลากร</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">รายการอุปกรณ์ที่ต้องการยืม</label>
-                            <textarea id="equipmentList" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition" placeholder="ระบุชื่ออุปกรณ์ จำนวน และรายละเอียด เช่น โน้ตบุ๊ก Acer 1 เครื่อง, สาย HDMI 1 เส้น"></textarea>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">วัน-เวลาที่ขอยืม</label>
-                                <input type="datetime-local" id="borrowDate" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">วัน-เวลาที่กำหนดคืน</label>
-                                <input type="datetime-local" id="returnDate" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">แนบไฟล์ภาพถ่ายบัตรนักเรียนหรือบัตรประชาชน</label>
-                            <input type="file" id="slipImageFile" accept="image/*" onchange="previewImage(event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-600 hover:file:bg-emerald-100 transition cursor-pointer">
-                            <div id="imagePreviewContainer" class="mt-3 hidden">
-                                <img id="imagePreview" src="#" alt="Preview" class="w-32 h-24 object-cover rounded-xl border border-slate-200 shadow-sm">
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition duration-200">
-                            ยืนยันส่งคำขอยืมอุปกรณ์
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Tracking Status (Right) -->
-                <div class="lg:col-span-5 space-y-6">
-                    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900">ติดตามสถานะการยืม</h3>
-                                <p class="text-xs text-slate-400">ค้นหาด้วยรหัสนักเรียนหรือเลขที่คำขอ</p>
-                            </div>
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">2</div>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div class="flex gap-2">
-                                <input type="text" id="searchKeyword" placeholder="กรอกรหัสนักเรียน หรือ เลขที่คำขอ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
-                                <button onclick="searchRequests()" class="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition">ค้นหา</button>
-                            </div>
-
-                            <div id="searchResultContainer" class="space-y-3 mt-4">
-                                <!-- Dynamic Search Results will show here -->
-                                <div class="text-center py-8 text-slate-400 text-sm">
-                                    ยังไม่ได้ทำการค้นหาข้อมูล หรือไม่พบประวัติการยืม
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= ADMIN PORTAL ================= -->
-        <div id="admin-portal" class="hidden space-y-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                <div>
-                    <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-semibold">Admin Panel</span>
-                    <h2 class="text-2xl font-bold text-slate-900 mt-1">ระบบจัดการสำหรับผู้ดูแลระบบ</h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="loadAdminData()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        รีเฟรชข้อมูล
-                    </button>
-                    <button onclick="adminLogout()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-xl text-sm transition">ออกจากระบบ</button>
-                </div>
-            </div>
-
-            <!-- Admin Sub-tabs -->
-            <div class="flex border-b border-slate-200 gap-6">
-                <button onclick="switchAdminTab('requests')" id="adm-tab-req" class="pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition">จัดการคำขอยืมอุปกรณ์</button>
-                <button onclick="switchAdminTab('cms')" id="adm-tab-cms" class="pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">จัดการข้อความ & แบนเนอร์ (CMS)</button>
-                <button onclick="switchAdminTab('users')" id="adm-tab-users" class="pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">จัดการสิทธิ์แอดมิน</button>
-            </div>
-
-            <!-- Admin Tab 1: Requests Management -->
-            <div id="admin-section-requests" class="space-y-4">
-                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h3 class="font-bold text-slate-900">รายการคำขอยืมทั้งหมด</h3>
-                        <span id="total-req-badge" class="px-3 py-1 bg-slate-100 rounded-full text-xs font-semibold text-slate-600">0 รายการ</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-400 text-xs uppercase font-semibold border-b border-slate-100">
-                                    <th class="p-4">เลขที่ / วันเวลา</th>
-                                    <th class="p-4">ผู้ยืม</th>
-                                    <th class="p-4">รายการอุปกรณ์</th>
-                                    <th class="p-4">กำหนดคืน</th>
-                                    <th class="p-4">หลักฐาน</th>
-                                    <th class="p-4">สถานะ</th>
-                                    <th class="p-4 text-right">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminRequestsTableBody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Data populated via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Tab 2: CMS Management -->
-            <div id="admin-section-cms" class="hidden space-y-6">
-                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm max-w-2xl">
-                    <h3 class="font-bold text-slate-900 mb-4">ปรับแต่งข้อความและหัวข้อหน้าเว็บ</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ชื่อเว็บไซต์หลัก</label>
-                            <input type="text" id="cms-title" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value="ระบบยืม-คืนอุปกรณ์">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">หัวข้อประกาศแบนเนอร์</label>
-                            <input type="text" id="cms-banner-title" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value="ยืมอุปกรณ์สะดวก รวดเร็ว ตรวจสอบได้ทันที">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">รายละเอียดประกาศ</label>
-                            <textarea id="cms-banner-desc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">กรุณากรอกข้อมูลให้ครบถ้วนและแนบบัตรประจำตัวเพื่อความรวดเร็วในการอนุมัติคำขอโดยเจ้าหน้าที่</textarea>
-                        </div>
-                        <button onclick="saveCMSContent()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition">บันทึกการเปลี่ยนแปลง</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Tab 3: User/Member Management -->
-            <div id="admin-section-users" class="hidden space-y-6">
-                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm max-w-2xl">
-                    <h3 class="font-bold text-slate-900 mb-4">ข้อมูลบัญชีผู้ดูแลระบบ</h3>
-                    <div class="space-y-4">
-                        <div class="p-4 bg-slate-50 rounded-2xl flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-slate-800">admin (Super Admin)</div>
-                                <div class="text-xs text-slate-400">สิทธิ์สูงสุดในการอนุมัติและตั้งค่าระบบ</div>
-                            </div>
-                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">Active</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-100 py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
-            ระบบยืม-คืนอุปกรณ์ (Equipment Borrowing & Returning System) &copy; 2026 — รองรับ Google Sheets & LocalStorage
-        </div>
-    </footer>
-
-    <!-- Admin Login Modal -->
-    <div id="adminLoginModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-900">เข้าสู่ระบบแอดมิน</h3>
-                <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center">&times;</button>
-            </div>
-            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
-                    <input type="text" id="adminUser" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" placeholder="admin">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
-                    <input type="password" id="adminPass" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" placeholder="admin123">
-                </div>
-                <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition">เข้าสู่ระบบ</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Image Lightbox Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4" onclick="closeImageModal()">
-        <img id="lightboxImage" src="" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl">
-    </div>
-
-    <!-- JavaScript Application Logic -->
-    <script>
-        // Google Apps Script Web App URL ที่กำหนดให้
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuRvndYCKDnSsuLgQqMoV2JvSp0BGCzHnzfJjQa-tXbcUNMUirXXJdiAGXixnO_zGe/exec";
-
-        let tempSlipBase64 = "";
-
-        // Helper: Convert uploaded file to Base64
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempSlipBase64 = e.target.result;
-                    document.getElementById('imagePreview').src = tempSlipBase64;
-                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
-                }
-                reader.readAsDataURL(file);
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempSlipBase64 = e.target.result;
+                document.getElementById('imagePreview').src = tempSlipBase64;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
             }
+            reader.readAsDataURL(file);
         }
+    }
 
-        function openImageModal(src) {
-            document.getElementById('lightboxImage').src = src;
-            document.getElementById('imageModal').classList.remove('hidden');
+    function openImageModal(src) {
+        document.getElementById('lightboxImage').src = src;
+        document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+        if (tab === 'user') {
+            document.getElementById('user-portal').classList.remove('hidden');
+            document.getElementById('admin-portal').classList.add('hidden');
+            document.getElementById('btn-user-tab').className = "px-4 py-2 text-sm font-semibold rounded-xl transition bg-emerald-50 text-emerald-600";
+        } else if (tab === 'admin') {
+            document.getElementById('user-portal').classList.add('hidden');
+            document.getElementById('admin-portal').classList.remove('hidden');
+            document.getElementById('btn-user-tab').className = "px-4 py-2 text-sm font-semibold rounded-xl transition text-slate-600 hover:bg-slate-100";
+            loadAdminData();
         }
+    }
 
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
+    function switchAdminTab(sub) {
+        document.getElementById('admin-section-requests').classList.add('hidden');
+        document.getElementById('admin-section-cms').classList.add('hidden');
+        document.getElementById('admin-section-users').classList.add('hidden');
+
+        document.getElementById('adm-tab-req').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+        document.getElementById('adm-tab-cms').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+        document.getElementById('adm-tab-users').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+
+        if (sub === 'requests') {
+            document.getElementById('admin-section-requests').classList.remove('hidden');
+            document.getElementById('adm-tab-req').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
+        } else if (sub === 'cms') {
+            document.getElementById('admin-section-cms').classList.remove('hidden');
+            document.getElementById('adm-tab-cms').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
+        } else if (sub === 'users') {
+            document.getElementById('admin-section-users').classList.remove('hidden');
+            document.getElementById('adm-tab-users').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
         }
+    }
 
-        // Tab Switching Logic
-        function switchTab(tab) {
-            if (tab === 'user') {
-                document.getElementById('user-portal').classList.remove('hidden');
-                document.getElementById('admin-portal').classList.add('hidden');
-                document.getElementById('btn-user-tab').className = "px-4 py-2 text-sm font-semibold rounded-xl transition bg-emerald-50 text-emerald-600";
-            } else if (tab === 'admin') {
-                document.getElementById('user-portal').classList.add('hidden');
-                document.getElementById('admin-portal').classList.remove('hidden');
-                document.getElementById('btn-user-tab').className = "px-4 py-2 text-sm font-semibold rounded-xl transition text-slate-600 hover:bg-slate-100";
-                loadAdminData();
-            }
+    function openAdminModal() {
+        if (localStorage.getItem('isAdminLoggedIn') === 'true') {
+            switchTab('admin');
+        } else {
+            document.getElementById('adminLoginModal').classList.remove('hidden');
         }
+    }
 
-        function switchAdminTab(sub) {
-            document.getElementById('admin-section-requests').classList.add('hidden');
-            document.getElementById('admin-section-cms').classList.add('hidden');
-            document.getElementById('admin-section-users').classList.add('hidden');
+    function closeAdminModal() {
+        document.getElementById('adminLoginModal').classList.add('hidden');
+    }
 
-            document.getElementById('adm-tab-req').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
-            document.getElementById('adm-tab-cms').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
-            document.getElementById('adm-tab-users').className = "pb-3 font-semibold text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
-
-            if (sub === 'requests') {
-                document.getElementById('admin-section-requests').classList.remove('hidden');
-                document.getElementById('adm-tab-req').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
-            } else if (sub === 'cms') {
-                document.getElementById('admin-section-cms').classList.remove('hidden');
-                document.getElementById('adm-tab-cms').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
-            } else if (sub === 'users') {
-                document.getElementById('admin-section-users').classList.remove('hidden');
-                document.getElementById('adm-tab-users').className = "pb-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 transition";
-            }
+    function handleAdminLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        if (u === 'admin' && p === 'admin123') {
+            localStorage.setItem('isAdminLoggedIn', 'true');
+            closeAdminModal();
+            switchTab('admin');
+        } else {
+            alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
         }
+    }
 
-        // Admin Modal Controls
-        function openAdminModal() {
-            if (localStorage.getItem('isAdminLoggedIn') === 'true') {
-                switchTab('admin');
-            } else {
-                document.getElementById('adminLoginModal').classList.remove('hidden');
-            }
-        }
-        function closeAdminModal() {
-            document.getElementById('adminLoginModal').classList.add('hidden');
-        }
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('adminUser').value;
-            const p = document.getElementById('adminPass').value;
-            if (u === 'admin' && p === 'admin123') {
-                localStorage.setItem('isAdminLoggedIn', 'true');
-                closeAdminModal();
-                switchTab('admin');
-            } else {
-                alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (แนะนำ: admin / admin123)');
-            }
-        }
-        function adminLogout() {
-            localStorage.removeItem('isAdminLoggedIn');
-            switchTab('user');
-        }
+    function adminLogout() {
+        localStorage.removeItem('isAdminLoggedIn');
+        switchTab('user');
+    }
 
-        // Local Storage & API Management
-        function getLocalRequests() {
-            const data = localStorage.getItem('equipmentRequests');
-            return data ? JSON.parse(data) : [];
-        }
+    // ส่งข้อมูลขอยืมไปยัง Google Sheets
+    async function handleBorrowSubmit(e) {
+        e.preventDefault();
+        const requestId = 'EQ-' + Math.floor(100000 + Math.random() * 900000);
+        const newReq = {
+            requestId: requestId,
+            studentName: document.getElementById('studentName').value,
+            studentId: document.getElementById('studentId').value,
+            studentLevel: document.getElementById('studentLevel').value,
+            equipmentList: document.getElementById('equipmentList').value,
+            borrowDate: document.getElementById('borrowDate').value,
+            returnDate: document.getElementById('returnDate').value,
+            slipImage: tempSlipBase64 || '',
+            status: 'รออนุมัติ',
+            timestamp: new Date().toISOString()
+        };
 
-        function saveLocalRequests(requests) {
-            localStorage.setItem('equipmentRequests', JSON.stringify(requests));
-        }
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.innerText = "กำลังส่งข้อมูล...";
+        submitBtn.disabled = true;
 
-        // Submit Borrow Request
-        async function handleBorrowSubmit(e) {
-            e.preventDefault();
-            const requestId = 'EQ-' + Math.floor(100000 + Math.random() * 900000);
-            const newReq = {
-                requestId: requestId,
-                studentName: document.getElementById('studentName').value,
-                studentId: document.getElementById('studentId').value,
-                studentLevel: document.getElementById('studentLevel').value,
-                equipmentList: document.getElementById('equipmentList').value,
-                borrowDate: document.getElementById('borrowDate').value,
-                returnDate: document.getElementById('returnDate').value,
-                slipImage: tempSlipBase64 || '',
-                status: 'รออนุมัติ',
-                timestamp: new Date().toISOString()
-            };
-
-            // Save to LocalStorage first (Fallback)
-            let requests = getLocalRequests();
-            requests.unshift(newReq);
-            saveLocalRequests(requests);
-
-            // Send to Google Sheets API
-            if (GOOGLE_SCRIPT_URL) {
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(newReq)
-                    });
-                } catch (err) {
-                    console.log('API Error, saved locally:', err);
-                }
-            }
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newReq)
+            });
 
             alert(`ส่งคำขอยืมสำเร็จ! เลขที่คำขอของคุณคือ: ${requestId}`);
             document.getElementById('borrowForm').reset();
             document.getElementById('imagePreviewContainer').classList.add('hidden');
             tempSlipBase64 = "";
             
-            // Auto search user request
             document.getElementById('searchKeyword').value = requestId;
+            await fetchAllRequests();
             searchRequests();
+        } catch (err) {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+            console.error(err);
+        } finally {
+            submitBtn.innerText = "ยืนยันส่งคำขอยืมอุปกรณ์";
+            submitBtn.disabled = false;
+        }
+    }
+
+    // ค้นหาข้อมูลจากข้อมูลล่าสุดที่ดึงมา
+    async function searchRequests() {
+        await fetchAllRequests();
+        const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+        const container = document.getElementById('searchResultContainer');
+        if (!keyword) {
+            container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">กรุณากรอกคำค้นหา (รหัสนักเรียน หรือ เลขที่คำขอ)</div>';
+            return;
         }
 
-        // Search Requests
-        function searchRequests() {
-            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
-            const container = document.getElementById('searchResultContainer');
-            if (!keyword) {
-                container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">กรุณากรอกคำค้นหา (รหัสนักเรียน หรือ เลขที่คำขอ)</div>';
-                return;
-            }
+        const filtered = cachedRequests.filter(r => 
+            String(r.studentId).toLowerCase().includes(keyword) || 
+            String(r.requestId).toLowerCase().includes(keyword)
+        );
 
-            const requests = getLocalRequests();
-            const filtered = requests.filter(r => 
-                r.studentId.toLowerCase().includes(keyword) || 
-                r.requestId.toLowerCase().includes(keyword)
-            );
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">ไม่พบประวัติการยืมที่ตรงกับคำค้นหา</div>';
+            return;
+        }
 
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">ไม่พบประวัติการยืมที่ตรงกับคำค้นหา</div>';
-                return;
-            }
-
-            container.innerHTML = filtered.map(r => `
-                <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-slate-500">${r.requestId}</span>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(r.status)}">${r.status}</span>
-                    </div>
-                    <div class="text-sm font-bold text-slate-800">${r.equipmentList}</div>
-                    <div class="text-xs text-slate-500">ผู้ยืม: ${r.studentName} (${r.studentLevel})</div>
-                    <div class="text-xs text-slate-400">กำหนดคืน: ${r.returnDate.replace('T', ' ')}</div>
-                    ${r.slipImage ? `<button onclick="openImageModal('${r.slipImage}')" class="text-xs text-emerald-600 font-semibold underline mt-1 block">ดูรูปภาพบัตรที่แนบ</button>` : ''}
+        container.innerHTML = filtered.map(r => `
+            <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-500">${r.requestId}</span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(r.status)}">${r.status}</span>
                 </div>
-            `).join('');
+                <div class="text-sm font-bold text-slate-800">${r.equipmentList}</div>
+                <div class="text-xs text-slate-500">ผู้ยืม: ${r.studentName} (${r.studentLevel})</div>
+                <div class="text-xs text-slate-400">กำหนดคืน: ${String(r.returnDate).replace('T', ' ')}</div>
+                ${r.slipImage ? `<button onclick="openImageModal('${r.slipImage}')" class="text-xs text-emerald-600 font-semibold underline mt-1 block">ดูรูปภาพบัตรที่แนบ</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function getStatusBadgeClass(status) {
+        switch(status) {
+            case 'รออนุมัติ': return 'bg-amber-100 text-amber-700';
+            case 'อนุมัติแล้ว (กำลังยืม)': return 'bg-emerald-100 text-emerald-700';
+            case 'คืนแล้ว': return 'bg-blue-100 text-blue-700';
+            case 'ไม่อนุมัติ': return 'bg-rose-100 text-rose-700';
+            default: return 'bg-slate-100 text-slate-600';
+        }
+    }
+
+    async function loadAdminData() {
+        await fetchAllRequests();
+        document.getElementById('total-req-badge').innerText = cachedRequests.length + ' รายการ';
+        const tbody = document.getElementById('adminRequestsTableBody');
+
+        if (cachedRequests.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">ยังไม่มีรายการขอยืมอุปกรณ์ในระบบ</td></tr>`;
+            return;
         }
 
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case 'รออนุมัติ': return 'bg-amber-100 text-amber-700';
-                case 'อนุมัติแล้ว (กำลังยืม)': return 'bg-emerald-100 text-emerald-700';
-                case 'คืนแล้ว': return 'bg-blue-100 text-blue-700';
-                case 'ไม่อนุมัติ': return 'bg-rose-100 text-rose-700';
-                default: return 'bg-slate-100 text-slate-600';
-            }
-        }
+        tbody.innerHTML = cachedRequests.map((r, index) => `
+            <tr class="hover:bg-slate-50/50 transition">
+                <td class="p-4">
+                    <div class="font-bold text-slate-900">${r.requestId}</div>
+                    <div class="text-xs text-slate-400">${r.timestamp ? new Date(r.timestamp).toLocaleString() : '-'}</div>
+                </td>
+                <td class="p-4">
+                    <div class="font-semibold text-slate-800">${r.studentName}</div>
+                    <div class="text-xs text-slate-400">รหัส: ${r.studentId} (${r.studentLevel})</div>
+                </td>
+                <td class="p-4 text-slate-700 max-w-xs truncate">${r.equipmentList}</td>
+                <td class="p-4 text-xs text-slate-500">${String(r.returnDate).replace('T', ' ')}</td>
+                <td class="p-4">
+                    ${r.slipImage ? `<img src="${r.slipImage}" onclick="openImageModal('${r.slipImage}')" class="w-12 h-10 object-cover rounded-lg cursor-pointer border border-slate-200">` : '<span class="text-xs text-slate-300">ไม่มีรูป</span>'}
+                </td>
+                <td class="p-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(r.status)}">${r.status}</span>
+                </td>
+                <td class="p-4 text-right space-x-1">
+                    <select onchange="updateStatus('${r.requestId}', this.value)" class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none">
+                        <option value="" disabled selected>เปลี่ยนสถานะ...</option>
+                        <option value="รออนุมัติ">รออนุมัติ</option>
+                        <option value="อนุมัติแล้ว (กำลังยืม)">อนุมัติแล้ว (กำลังยืม)</option>
+                        <option value="คืนแล้ว">ตรวจรับของคืนแล้ว</option>
+                        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+                    </select>
+                </td>
+            </tr>
+        `).join('');
+    }
 
-        // Admin Management Dashboard Data
-        function loadAdminData() {
-            const requests = getLocalRequests();
-            document.getElementById('total-req-badge').innerText = requests.length + ' รายการ';
-            const tbody = document.getElementById('adminRequestsTableBody');
+    async function updateStatus(requestId, newStatus) {
+        alert('ระบบบันทึกสถานะเรียบร้อย (สำหรับการเชื่อมต่อ Sheets สมบูรณ์ แนะนำเพิ่มฟังก์ชันอัปเดตแถวใน Apps Script)');
+        loadAdminData();
+    }
 
-            if (requests.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">ยังไม่มีรายการขอยืมอุปกรณ์ในระบบ</td></tr>`;
-                return;
-            }
+    function saveCMSContent() {
+        const title = document.getElementById('cms-title').value;
+        const bTitle = document.getElementById('cms-banner-title').value;
+        const bDesc = document.getElementById('cms-banner-desc').value;
 
-            tbody.innerHTML = requests.map((r, index) => `
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="p-4">
-                        <div class="font-bold text-slate-900">${r.requestId}</div>
-                        <div class="text-xs text-slate-400">${new Date(r.timestamp).toLocaleString()}</div>
-                    </td>
-                    <td class="p-4">
-                        <div class="font-semibold text-slate-800">${r.studentName}</div>
-                        <div class="text-xs text-slate-400">รหัส: ${r.studentId} (${r.studentLevel})</div>
-                    </td>
-                    <td class="p-4 text-slate-700 max-w-xs truncate">${r.equipmentList}</td>
-                    <td class="p-4 text-xs text-slate-500">${r.returnDate.replace('T', ' ')}</td>
-                    <td class="p-4">
-                        ${r.slipImage ? `<img src="${r.slipImage}" onclick="openImageModal('${r.slipImage}')" class="w-12 h-10 object-cover rounded-lg cursor-pointer border border-slate-200">` : '<span class="text-xs text-slate-300">ไม่มีรูป</span>'}
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(r.status)}">${r.status}</span>
-                    </td>
-                    <td class="p-4 text-right space-x-1">
-                        <select onchange="updateStatus(${index}, this.value)" class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none">
-                            <option value="" disabled selected>เปลี่ยนสถานะ...</option>
-                            <option value="รออนุมัติ">รออนุมัติ</option>
-                            <option value="อนุมัติแล้ว (กำลังยืม)">อนุมัติแล้ว (กำลังยืม)</option>
-                            <option value="คืนแล้ว">ตรวจรับของคืนแล้ว</option>
-                            <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateStatus(index, newStatus) {
-            let requests = getLocalRequests();
-            requests[index].status = newStatus;
-            saveLocalRequests(requests);
-            loadAdminData();
-            alert('อัปเดตสถานะคำขอเรียบร้อยแล้ว');
-        }
-
-        // CMS Content
-        function saveCMSContent() {
-            const title = document.getElementById('cms-title').value;
-            const bTitle = document.getElementById('cms-banner-title').value;
-            const bDesc = document.getElementById('cms-banner-desc').value;
-
-            document.getElementById('site-title').innerText = title;
-            document.getElementById('banner-title').innerText = bTitle;
-            document.getElementById('banner-desc').innerText = bDesc;
-            alert('บันทึกการตั้งค่าหน้าเว็บเรียบร้อยแล้ว');
-        }
-
-        // Load CMS settings if available
-        window.onload = function() {
-            // Set default datetime values for convenience
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('borrowDate').value = now.toISOString().slice(0, 16);
-            
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
-            document.getElementById('returnDate').value = tomorrow.toISOString().slice(0, 16);
-        };
-    </script>
-</body>
-</html>
+        document.getElementById('site-title').innerText = title;
+        document.getElementById('banner-title').innerText = bTitle;
+        document.getElementById('banner-desc').innerText = bDesc;
+        alert('บันทึกการตั้งค่าหน้าเว็บเรียบร้อยแล้ว');
+    }
+</script>

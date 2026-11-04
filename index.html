@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบยืม-คืนอุปกรณ์ (Equipment Borrowing & Returning System)</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Header / Navbar -->
+    <!-- Header -->
     <header class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('user')">
@@ -26,50 +22,40 @@
                     <p class="text-xs text-slate-400 font-medium">Equipment Borrowing & Returning System</p>
                 </div>
             </div>
-
-            <!-- Quick Switch & Admin Login -->
             <div class="flex items-center space-x-2">
                 <button onclick="switchTab('user')" id="btn-user-tab" class="px-4 py-2 text-sm font-semibold rounded-xl transition bg-emerald-50 text-emerald-600">หน้าผู้ใช้งาน</button>
-                <button onclick="openAdminModal()" class="px-4 py-2 text-sm font-semibold rounded-xl transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    ผู้ดูแลระบบ
-                </button>
+                <button onclick="openAdminModal()" class="px-4 py-2 text-sm font-semibold rounded-xl transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">ผู้ดูแลระบบ</button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        
-        <!-- ================= USER PORTAL ================= -->
+        <!-- USER PORTAL -->
         <div id="user-portal" class="space-y-8">
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-500/10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="space-y-2 text-center md:text-left">
-                    <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase">ประกาศประชาสัมพันธ์</span>
-                    <h2 id="banner-title" class="text-2xl sm:text-3xl font-bold">ยืมอุปกรณ์สะดวก รวดเร็ว ตรวจสอบได้ทันที</h2>
-                    <p id="banner-desc" class="text-emerald-50 text-sm max-w-xl">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อความรวดเร็วในการอนุมัติคำขอโดยเจ้าหน้าที่</p>
-                </div>
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-500/10">
+                <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase mb-2">ประกาศประชาสัมพันธ์</span>
+                <h2 class="text-2xl sm:text-3xl font-bold">ยืมอุปกรณ์สะดวก รวดเร็ว ตรวจสอบได้ทันที</h2>
+                <p class="text-emerald-50 text-sm max-w-xl mt-1">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อความรวดเร็วในการอนุมัติคำขอโดยเจ้าหน้าที่</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Borrow Form -->
                 <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
                     <h3 class="text-lg font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100">ฟอร์มขอยืมอุปกรณ์</h3>
                     <form id="borrowForm" onsubmit="handleBorrowSubmit(event)" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">ชื่อ-นามสกุล</label>
-                                <input type="text" id="studentName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น สมชาย ใจดี">
+                                <input type="text" id="studentName" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น สมชาย ใจดี">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">รหัสนักเรียน</label>
-                                <input type="text" id="studentId" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น 12345">
+                                <input type="text" id="studentId" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น 12345">
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">ระดับชั้น</label>
-                            <select id="studentLevel" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                            <select id="studentLevel" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
                                 <option value="">-- เลือกระดับชั้น --</option>
                                 <option value="ม.1">มัธยมศึกษาปีที่ 1</option>
                                 <option value="ม.2">มัธยมศึกษาปีที่ 2</option>
@@ -77,17 +63,12 @@
                                 <option value="ม.4">มัธยมศึกษาปีที่ 4</option>
                                 <option value="ม.5">มัธยมศึกษาปีที่ 5</option>
                                 <option value="ม.6">มัธยมศึกษาปีที่ 6</option>
-                                <option value="ปวช.1">ปวช. 1</option>
-                                <option value="ปวช.2">ปวช. 2</option>
-                                <option value="ปวช.3">ปวช. 3</option>
                             </select>
                         </div>
-
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">รายการอุปกรณ์ที่ต้องการยืม</label>
-                            <textarea id="equipmentList" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น โน้ตบุ๊ก 1 เครื่อง, สาย HDMI 1 เส้น"></textarea>
+                            <textarea id="equipmentList" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="เช่น โน้ตบุ๊ก 1 เครื่อง"></textarea>
                         </div>
-
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">วัน-เวลาที่ขอยืม</label>
@@ -98,39 +79,36 @@
                                 <input type="datetime-local" id="returnDate" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
                             </div>
                         </div>
-
-                        <button type="submit" id="submitBtn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition">
-                            ยืนยันส่งคำขอยืมอุปกรณ์
-                        </button>
+                        <button type="submit" id="submitBtn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg transition">ยืนยันส่งคำขอยืมอุปกรณ์</button>
                     </form>
                 </div>
 
-                <!-- Tracking Status -->
                 <div class="lg:col-span-5 space-y-6">
                     <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
                         <h3 class="text-lg font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100">ติดตามสถานะการยืม</h3>
                         <div class="space-y-4">
                             <div class="flex gap-2">
-                                <input type="text" id="searchKeyword" placeholder="กรอกรหัสนักเรียน หรือ เลขที่คำขอ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-                                <button onclick="searchRequests()" class="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition">ค้นหา</button>
+                                <input type="text" id="searchKeyword" placeholder="กรอกรหัสนักเรียน หรือ เลขที่คำขอ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none">
+                                <button onclick="searchRequests()" class="px-5 py-3 bg-slate-900 text-white font-semibold rounded-xl text-sm">ค้นหา</button>
                             </div>
-                            <div id="searchResultContainer" class="space-y-3 mt-4 text-center py-8 text-slate-400 text-sm">
-                                ยังไม่ได้ทำการค้นหาข้อมูล
-                            </div>
+                            <div id="searchResultContainer" class="space-y-3 mt-4 text-center py-8 text-slate-400 text-sm">ยังไม่ได้ทำการค้นหาข้อมูล</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= ADMIN PORTAL ================= -->
+        <!-- ADMIN PORTAL -->
         <div id="admin-portal" class="hidden space-y-8">
             <div class="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <div>
                     <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-semibold">Admin Panel</span>
                     <h2 class="text-2xl font-bold text-slate-900 mt-1">ระบบจัดการสำหรับผู้ดูแลระบบ</h2>
                 </div>
-                <button onclick="adminLogout()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-xl text-sm transition">ออกจากระบบ</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="loadAdminData()" class="px-4 py-2 bg-slate-100 rounded-xl text-sm font-semibold">รีเฟรชข้อมูล</button>
+                    <button onclick="adminLogout()" class="px-4 py-2 bg-rose-50 text-rose-600 font-semibold rounded-xl text-sm">ออกจากระบบ</button>
+                </div>
             </div>
 
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -147,10 +125,11 @@
                                 <th class="p-4">รายการอุปกรณ์</th>
                                 <th class="p-4">กำหนดคืน</th>
                                 <th class="p-4">สถานะ</th>
+                                <th class="p-4 text-right">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="adminRequestsTableBody" class="divide-y divide-slate-100 text-sm">
-                            <tr><td colspan="5" class="p-6 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="6" class="p-6 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -174,12 +153,12 @@
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
                     <input type="password" id="adminPass" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" placeholder="กรอกรหัสผ่าน">
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition">เข้าสู่ระบบ</button>
+                <button type="submit" class="w-full py-3.5 bg-emerald-600 text-white font-semibold rounded-xl text-sm">เข้าสู่ระบบ</button>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Script Logic -->
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuRvndYCKDnSsuLgQqMoV2JvSp0BGCzHnzfJjQa-tXbcUNMUirXXJdiAGXixnO_zGe/exec";
         let cachedRequests = [];
@@ -228,9 +207,7 @@
                 document.getElementById('adminLoginModal').classList.remove('hidden');
             }
         }
-        function closeAdminModal() {
-            document.getElementById('adminLoginModal').classList.add('hidden');
-        }
+        function closeAdminModal() { document.getElementById('adminLoginModal').classList.add('hidden'); }
 
         function handleAdminLogin(e) {
             e.preventDefault();
@@ -261,7 +238,6 @@
                 equipmentList: document.getElementById('equipmentList').value,
                 borrowDate: document.getElementById('borrowDate').value,
                 returnDate: document.getElementById('returnDate').value,
-                slipImage: "",
                 status: 'รออนุมัติ',
                 timestamp: new Date().toISOString()
             };
@@ -284,7 +260,7 @@
                 await fetchAllRequests();
                 searchRequests();
             } catch (err) {
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
             } finally {
                 submitBtn.innerText = "ยืนยันส่งคำขอยืมอุปกรณ์";
                 submitBtn.disabled = false;
@@ -329,7 +305,7 @@
             const tbody = document.getElementById('adminRequestsTableBody');
 
             if (cachedRequests.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">ยังไม่มีรายการขอยืมอุปกรณ์ในระบบ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">ยังไม่มีรายการขอยืมอุปกรณ์ในระบบ</td></tr>`;
                 return;
             }
 
@@ -346,10 +322,36 @@
                     <td class="p-4 text-slate-700">${r.equipmentList}</td>
                     <td class="p-4 text-xs text-slate-500">${String(r.returnDate).replace('T', ' ')}</td>
                     <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">${r.status || 'รออนุมัติ'}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${r.status === 'อนุมัติแล้ว (กำลังยืม)' ? 'bg-emerald-100 text-emerald-700' : r.status === 'คืนแล้ว' ? 'bg-blue-100 text-blue-700' : r.status === 'ไม่อนุมัติ' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">${r.status || 'รออนุมัติ'}</span>
+                    </td>
+                    <td class="p-4 text-right">
+                        <select onchange="updateRequestStatus('${r.requestId}', this.value)" class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium">
+                            <option value="" disabled selected>เปลี่ยนสถานะ...</option>
+                            <option value="รออนุมัติ">รออนุมัติ</option>
+                            <option value="อนุมัติแล้ว (กำลังยืม)">อนุมัติแล้ว (กำลังยืม)</option>
+                            <option value="คืนแล้ว">คืนแล้ว</option>
+                            <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+                        </select>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        async function updateRequestStatus(requestId, newStatus) {
+            if (!confirm(`ต้องการเปลี่ยนสถานะคำขอ ${requestId} เป็น "${newStatus}" ใช่หรือไม่?`)) return;
+            
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "update", requestId: requestId, status: newStatus })
+                });
+                alert('อัปเดตสถานะสำเร็จ!');
+                setTimeout(loadAdminData, 1000); // รอรีโหลดข้อมูลใหม่
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+            }
         }
     </script>
 </body>
